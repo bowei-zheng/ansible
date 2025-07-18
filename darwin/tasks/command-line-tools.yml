@@ -1,0 +1,24 @@
+---
+# Install Xcode Command Line Tools
+- name: Check if Xcode Command Line Tools are installed
+  command: xcode-select -p
+  register: xcode_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Xcode Command Line Tools
+  command: xcode-select --install
+  when: xcode_check.rc != 0
+  register: xcode_install
+  changed_when: xcode_install.rc == 0
+  failed_when: xcode_install.rc != 0 and xcode_install.rc != 1
+
+- name: Wait for Xcode Command Line Tools installation
+  command: xcode-select -p
+  register: xcode_wait
+  changed_when: false
+  failed_when: false
+  when: xcode_check.rc != 0
+  until: xcode_wait.rc == 0
+  retries: 30
+  delay: 10 

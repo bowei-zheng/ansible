@@ -1,0 +1,90 @@
+---
+# SSH Key Generation and GitHub Configuration
+- name: Check if SSH key already exists
+  stat:
+    path: "~/.ssh/id_ed25519"
+  register: ssh_key_exists
+  changed_when: false
+
+- name: Generate SSH key if it doesn't exist
+  command: ssh-keygen -t ed25519 -C "{{ github_email | default('your-email@example.com') }}" -f ~/.ssh/id_ed25519 -N ""
+  args:
+    creates: ~/.ssh/id_ed25519
+  when: not ssh_key_exists.stat.exists
+  register: ssh_key_generated
+
+- name: Start SSH agent
+  command: ssh-agent -s
+  changed_when: false
+  when: not ssh_key_exists.stat.exists
+
+- name: Add SSH key to SSH agent
+  command: ssh-add ~/.ssh/id_ed25519
+  changed_when: false
+  when: not ssh_key_exists.stat.exists
+
+- name: Create SSH config file
+  copy:
+    dest: ~/.ssh/config
+    content: |
+      Host *
+        AddKeysToAgent yes
+        UseKeychain yes
+        IdentityFile ~/.ssh/id_ed25519
+    mode: '0600'
+  when: not ssh_key_exists.stat.exists
+
+- name: Display SSH public key for GitHub
+  command: cat ~/.ssh/id_ed25519.pub
+  register: ssh_public_key
+  changed_when: false
+  when: not ssh_key_exists.stat.exists
+
+- name: Show instructions for adding SSH key to GitHub
+  debug:
+    msg: |
+      SSH key has been generated successfully!
+      
+      To add this SSH key to your GitHub account:
+      
+      1. Copy the public key below:
+      {{ ssh_public_key.stdout }}
+      
+      2. Go to GitHub.com → Settings → SSH and GPG keys → New SSH key
+      3. Paste the key and give it a descriptive title
+      4. Click "Add SSH key"
+      
+      After adding the key to GitHub, you can test the connection with:
+      ssh -T git@github.com
+  when: not ssh_key_exists.stat.exists
+
+- name: SSH key already exists
+  debug:
+    msg: "SSH key already exists at ~/.ssh/id_ed25519"
+  when: ssh_key_exists.stat.exists
+
+- name: Configure Git with user information
+  git_config:
+    name: "user.name"
+    scope: global
+    value: "{{ git_name | default('Your Name') }}"
+  when: git_name is defined
+
+- name: Configure Git with email
+  git_config:
+    name: "user.email"
+    scope: global
+    value: "{{ github_email | default('your-email@example.com') }}"
+  when: github_email is defined
+
+- name: Test GitHub SSH connection (optional)
+  command: ssh -T git@github.com
+  register: github_ssh_test
+  changed_when: false
+  failed_when: false
+  when: test_github_connection | default(false)
+
+- name: Display GitHub SSH test result
+  debug:
+    msg: "{{ github_ssh_test.stdout }}"
+  when: test_github_connection | default(false) and github_ssh_test.rc == 1 

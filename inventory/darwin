@@ -1,0 +1,14 @@
+[darwin_devices]
+# Local macOS device
+localhost ansible_host=127.0.0.1 ansible_connection=local
+
+# Remote macOS devices (uncomment and customize as needed)
+# personal ansible_host=<your_personal_macOS_ip> ansible_user=your_username
+# work ansible_host=<your_work_macOS_ip> ansible_user=your_username
+
+[darwin_devices:vars]
+# Default settings for remote SSH connections
+ansible_connection=ssh
+ansible_python_interpreter=/usr/bin/python3
+# Uncomment and set if you use SSH keys
+# ansible_ssh_private_key_file=~/.ssh/id_ed25519 

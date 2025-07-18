@@ -1,0 +1,28 @@
+---
+- name: Configure macOS devices
+  hosts: darwin_devices
+
+  vars_files:
+    - config.yml
+
+  pre_tasks:
+    - name: Include playbook configuration
+      include_vars: "{{ item }}"
+      with_fileglob:
+        - "{{ playbook_dir }}/config.yml"
+      tags: ['always']
+
+  tasks:
+    - import_tasks: tasks/command-line-tools.yml
+      tags: ['command-line-tools']
+
+    - import_tasks: tasks/homebrew.yml
+      tags: ['homebrew']
+
+    - import_tasks: tasks/dock.yml
+      when: configure_dock
+      tags: ['dock']
+
+    - import_tasks: tasks/ssh-github.yml
+      when: configure_ssh_github
+      tags: ['ssh-github'] 

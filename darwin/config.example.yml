@@ -1,0 +1,31 @@
+---
+# Example macOS Configuration
+# Copy this file to config.yml and customize for your devices
+
+# Set to 'true' to configure the Dock via dockutil
+configure_dock: false
+dockitems_remove: []
+# - Launchpad
+# - TV
+# - Podcasts
+# - 'App Store'
+dockitems_persist: []
+# - name: "Docker"
+#   path: "/Applications/Docker.app/"
+#   pos: 5
+
+# Homebrew packages to install
+homebrew_installed_packages:
+  - git
+
+homebrew_taps: []
+
+homebrew_cask_appdir: /Applications
+homebrew_cask_apps:
+  - docker
+
+# SSH and GitHub configuration
+configure_ssh_github: false
+github_email: "your-email@example.com"
+git_name: "Your Name"
+test_github_connection: false 
