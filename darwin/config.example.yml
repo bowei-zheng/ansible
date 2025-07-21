@@ -24,8 +24,12 @@ homebrew_cask_appdir: /Applications
 homebrew_cask_apps:
   - docker
 
-# SSH and GitHub configuration
-configure_ssh_github: false
+# SSH configuration
+configure_ssh: false
+ssh_key_id: "your-email@example.com"
+
+# GitHub configuration
+configure_github: false
 github_email: "your-email@example.com"
 git_name: "Your Name"
 test_github_connection: false 

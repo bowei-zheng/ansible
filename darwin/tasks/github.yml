@@ -1,0 +1,27 @@
+---
+# GitHub Configuration and Testing
+- name: Configure Git with user information
+  git_config:
+    name: "user.name"
+    scope: global
+    value: "{{ git_name | default('Your Name') }}"
+  when: git_name is defined
+
+- name: Configure Git with email
+  git_config:
+    name: "user.email"
+    scope: global
+    value: "{{ github_email | default('your-email@example.com') }}"
+  when: github_email is defined
+
+- name: Test GitHub SSH connection (optional)
+  command: ssh -T git@github.com
+  register: github_ssh_test
+  changed_when: false
+  failed_when: false
+  when: test_github_connection | default(false)
+
+- name: Display GitHub SSH test result
+  debug:
+    msg: "{{ github_ssh_test.stdout }}"
+  when: test_github_connection | default(false) and github_ssh_test.rc == 1 

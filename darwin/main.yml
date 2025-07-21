@@ -23,6 +23,10 @@
       when: configure_dock
       tags: ['dock']
 
-    - import_tasks: tasks/ssh-github.yml
-      when: configure_ssh_github
-      tags: ['ssh-github'] 
+    - import_tasks: tasks/ssh.yml
+      when: configure_ssh
+      tags: ['ssh']
+
+    - import_tasks: tasks/github.yml
+      when: configure_github
+      tags: ['github'] 
