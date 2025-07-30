@@ -52,7 +52,8 @@ ansible/
 The macOS playbook includes:
 - Homebrew package management (formula and cask)
 - Dock configuration (optional)
-- SSH and GitHub configuration (optional)
+- SSH key generation and configuration (optional)
+- GitHub identity configuration (single or multi-identity)
 
 ## Contributing
 

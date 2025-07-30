@@ -13,6 +13,9 @@
       tags: ['always']
 
   tasks:
+    - import_tasks: tasks/validate-ssh-github-config.yml
+      tags: ['always']
+
     - import_tasks: tasks/command-line-tools.yml
       tags: ['command-line-tools']
 
@@ -23,10 +26,18 @@
       when: configure_dock
       tags: ['dock']
 
-    - import_tasks: tasks/ssh.yml
-      when: configure_ssh
-      tags: ['ssh']
+    - import_tasks: tasks/ssh-single-identity.yml
+      when: configure_ssh_single_identity
+      tags: ['ssh', 'ssh-single-identity']
 
-    - import_tasks: tasks/github.yml
-      when: configure_github
-      tags: ['github'] 
+    - import_tasks: tasks/ssh-multi-identity.yml
+      when: configure_ssh_multi_identity
+      tags: ['ssh', 'ssh-multi-identity']
+
+    - import_tasks: tasks/github-single-identity.yml
+      when: configure_github_single_identity
+      tags: ['github', 'github-single-identity']
+
+    - import_tasks: tasks/github-multi-identity.yml
+      when: configure_github_multi_identity
+      tags: ['github', 'github-multi-identity'] 

@@ -25,11 +25,40 @@ homebrew_cask_apps:
   - docker
 
 # SSH configuration
-configure_ssh: false
+# Set to 'true' to configure basic SSH key generation (single identity)
+# Must be explicitly enabled - not automatically enabled by other settings
+configure_ssh_single_identity: false
 ssh_key_id: "your-email@example.com"
 
-# GitHub configuration
-configure_github: false
+# Multi-identity SSH configuration
+# Set to 'true' to configure SSH for multiple identities (work and personal)
+# Must be explicitly enabled - not automatically enabled by other settings
+configure_ssh_multi_identity: false
+
+# Single GitHub Identity Configuration
+# Set to 'true' to configure a single GitHub identity (mutually exclusive with multi-identity)
+configure_github_single_identity: false
 github_email: "your-email@example.com"
 git_name: "Your Name"
-test_github_connection: false 
+test_github_connection: false
+
+# Multiple GitHub Identity Configuration
+# Set to 'true' to configure multiple GitHub identities for work and personal use (mutually exclusive with single-identity)
+configure_github_multi_identity: false
+
+# Personal GitHub account settings (used for all repositories except work directory)
+github_personal_email: "your-personal-email@example.com"
+git_personal_name: "Your Personal Name"
+github_personal_directory: "~/repositories/personal/"
+github_personal_ssh_host: "personal"
+
+# Work GitHub account settings (used only for repositories in work directory)
+github_work_email: "your-work-email@company.com"
+git_work_name: "Your Work Name"
+github_work_directory: "~/repositories/work/"
+github_work_ssh_host: "work"
+
+# SSH Key Configuration
+# Set to 'personal' to use personal account with default SSH key (~/.ssh/id_ed25519)
+# Set to 'work' to use work account with default SSH key (~/.ssh/id_ed25519)
+github_default_ssh_account: "personal" 
