@@ -70,4 +70,5 @@ configure_cursor_plugins: false
 # Cursor plugins/extensions to install (simple list of extension IDs)
 cursor_plugins:
   - "ms-python.python"                    # Python support
+  - "ms-azuretools.vscode-docker"         # Docker support
   - "eamodio.gitlens"                     # Git supercharged
