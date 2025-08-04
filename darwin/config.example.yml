@@ -61,4 +61,13 @@ github_work_ssh_host: "work"
 # SSH Key Configuration
 # Set to 'personal' to use personal account with default SSH key (~/.ssh/id_ed25519)
 # Set to 'work' to use work account with default SSH key (~/.ssh/id_ed25519)
-github_default_ssh_account: "personal" 
+github_default_ssh_account: "personal"
+
+# Cursor Plugin Configuration
+# Set to 'true' to configure Cursor plugins/extensions
+configure_cursor_plugins: false
+
+# Cursor plugins/extensions to install (simple list of extension IDs)
+cursor_plugins:
+  - "ms-python.python"                    # Python support
+  - "eamodio.gitlens"                     # Git supercharged
