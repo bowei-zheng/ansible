@@ -1,0 +1,43 @@
+---
+# Python Environment Setup
+- name: Install pipx via Homebrew
+  homebrew:
+    name: pipx
+    state: present
+
+- name: Check which pipx path exists
+  stat:
+    path: "{{ item }}"
+  loop:
+    - /usr/local/bin/pipx
+    - /opt/homebrew/bin/pipx
+  register: pipx_path_check
+
+- name: Set pipx path
+  set_fact:
+    pipx_path: "{{ '/opt/homebrew/bin/pipx' if pipx_path_check.results[1].stat.exists else '/usr/local/bin/pipx' }}"
+
+- name: Verify pipx is working
+  command: "{{ pipx_path }} --version"
+  register: pipx_version_check
+  changed_when: false
+
+- name: Install poetry with pipx
+  community.general.pipx:
+    name: poetry
+    state: latest
+    executable: "{{ pipx_path }}"
+  register: poetry_install
+
+- name: Install tox with pipx
+  community.general.pipx:
+    name: tox
+    state: latest
+    executable: "{{ pipx_path }}"
+  register: tox_install
+
+- name: Display installation results
+  debug:
+    msg: "Python tools installed successfully: poetry={{ poetry_install.changed }}, tox={{ tox_install.changed }}"
+  when: poetry_install is defined and tox_install is defined
+  

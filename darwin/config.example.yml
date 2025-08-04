@@ -61,4 +61,8 @@ github_work_ssh_host: "work"
 # SSH Key Configuration
 # Set to 'personal' to use personal account with default SSH key (~/.ssh/id_ed25519)
 # Set to 'work' to use work account with default SSH key (~/.ssh/id_ed25519)
-github_default_ssh_account: "personal" 
+github_default_ssh_account: "personal"
+
+# Python Environment Configuration
+# Set to 'true' to configure Python development tools (pipx, poetry, tox)
+configure_python: false
