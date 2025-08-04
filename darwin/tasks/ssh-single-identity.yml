@@ -1,0 +1,52 @@
+---
+# Single SSH Identity Configuration
+- name: Check if SSH key already exists
+  stat:
+    path: "~/.ssh/id_ed25519"
+  register: ssh_key_exists
+  changed_when: false
+
+- name: Generate SSH key if it doesn't exist
+  command: ssh-keygen -t ed25519 -C "{{ ssh_key_id | default('your-email@example.com') }}" -f ~/.ssh/id_ed25519 -N ""
+  args:
+    creates: ~/.ssh/id_ed25519
+  when: not ssh_key_exists.stat.exists
+  register: ssh_key_generated
+
+- name: Start SSH agent
+  command: ssh-agent -s
+  changed_when: false
+  when: not ssh_key_exists.stat.exists
+
+- name: Add SSH key to SSH agent
+  command: ssh-add ~/.ssh/id_ed25519
+  changed_when: false
+  when: not ssh_key_exists.stat.exists
+
+- name: Create SSH config file (single identity)
+  template:
+    src: ssh-config-single.j2
+    dest: ~/.ssh/config
+    mode: '0600'
+  when: not ssh_key_exists.stat.exists
+
+- name: Display SSH public key
+  command: cat ~/.ssh/id_ed25519.pub
+  register: ssh_public_key
+  changed_when: false
+  when: not ssh_key_exists.stat.exists
+
+- name: Show SSH key generation completion
+  debug:
+    msg: |
+      SSH key has been generated successfully!
+      
+      Public key: {{ ssh_public_key.stdout }}
+      
+      The SSH key has been added to your SSH agent and configuration is complete.
+  when: not ssh_key_exists.stat.exists
+
+- name: SSH key already exists
+  debug:
+    msg: "SSH key already exists at ~/.ssh/id_ed25519"
+  when: ssh_key_exists.stat.exists 

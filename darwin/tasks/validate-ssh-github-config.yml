@@ -1,0 +1,234 @@
+---
+# Configuration Validation
+- name: Validate SSH configuration
+  fail:
+    msg: |
+      Invalid SSH configuration detected!
+      
+      You have enabled both single and multi-identity SSH configurations:
+      - configure_ssh_single_identity: {{ configure_ssh_single_identity }}
+      - configure_ssh_multi_identity: {{ configure_ssh_multi_identity }}
+      
+      Please choose only ONE SSH configuration:
+      - Set configure_ssh_single_identity: true for single SSH identity
+      - Set configure_ssh_multi_identity: true for multi-identity SSH
+      - Set both to false to skip SSH configuration
+  when: 
+    - configure_ssh_single_identity | default(false)
+    - configure_ssh_multi_identity | default(false)
+
+- name: Validate GitHub configuration
+  fail:
+    msg: |
+      Invalid GitHub configuration detected!
+      
+      You have enabled both single and multi-identity GitHub configurations:
+      - configure_github_single_identity: {{ configure_github_single_identity }}
+      - configure_github_multi_identity: {{ configure_github_multi_identity }}
+      
+      Please choose only ONE GitHub configuration:
+      - Set configure_github_single_identity: true for single GitHub identity
+      - Set configure_github_multi_identity: true for multi-identity GitHub
+      - Set both to false to skip GitHub configuration
+  when: 
+    - configure_github_single_identity | default(false)
+    - configure_github_multi_identity | default(false)
+
+- name: Check for existing SSH keys (any type)
+  shell: find ~/.ssh -name "id_*" -type f | grep -v ".pub" | wc -l
+  register: ssh_key_count
+  changed_when: false
+  when: configure_github_single_identity | default(false) or configure_github_multi_identity | default(false)
+
+- name: List existing SSH keys
+  shell: find ~/.ssh -name "id_*" -type f | grep -v ".pub" | sort
+  register: existing_ssh_keys
+  changed_when: false
+  when: configure_github_single_identity | default(false) or configure_github_multi_identity | default(false)
+
+- name: Check for expected multi-identity SSH keys (personal)
+  stat:
+    path: "~/.ssh/id_ed25519_{{ github_personal_ssh_host | default('personal') }}"
+  register: ssh_personal_key_exists
+  when: configure_github_single_identity | default(false) or configure_github_multi_identity | default(false)
+
+- name: Check for expected multi-identity SSH keys (work)
+  stat:
+    path: "~/.ssh/id_ed25519_{{ github_work_ssh_host | default('work') }}"
+  register: ssh_work_key_exists
+  when: configure_github_single_identity | default(false) or configure_github_multi_identity | default(false)
+
+- name: Determine existing SSH key configuration
+  set_fact:
+    existing_ssh_config: >
+      {% if ssh_key_count.stdout | int == 0 %}
+      none
+      {% elif ssh_key_count.stdout | int == 1 and not ssh_personal_key_exists.stat.exists and not ssh_work_key_exists.stat.exists %}
+      single
+      {% elif ssh_personal_key_exists.stat.exists or ssh_work_key_exists.stat.exists %}
+      multi
+      {% else %}
+      multiple_other
+      {% endif %}
+  when: configure_github_single_identity | default(false) or configure_github_multi_identity | default(false)
+
+- name: Validate SSH and GitHub multi-identity mismatch
+  fail:
+    msg: |
+      Configuration mismatch detected!
+      
+      You have enabled GitHub multi-identity but not SSH multi-identity:
+      - configure_github_multi_identity: {{ configure_github_multi_identity }}
+      - configure_ssh_multi_identity: {{ configure_ssh_multi_identity }}
+      
+      GitHub multi-identity requires SSH multi-identity to be enabled.
+      Please set configure_ssh_multi_identity: true
+  when: 
+    - configure_github_multi_identity | default(false)
+    - not configure_ssh_multi_identity | default(false)
+
+- name: Validate SSH multi-identity without GitHub multi-identity
+  fail:
+    msg: |
+      Configuration mismatch detected!
+      
+      You have enabled SSH multi-identity but not GitHub multi-identity:
+      - configure_ssh_multi_identity: {{ configure_ssh_multi_identity }}
+      - configure_github_multi_identity: {{ configure_github_multi_identity }}
+      
+      SSH multi-identity is designed to work with GitHub multi-identity.
+      Please set configure_github_multi_identity: true or disable SSH multi-identity
+  when: 
+    - configure_ssh_multi_identity | default(false)
+    - not configure_github_multi_identity | default(false)
+
+- name: Fail on GitHub multi-identity without SSH multi-identity
+  fail:
+    msg: |
+      Configuration error detected!
+      
+      You are configuring GitHub multi-identity but not SSH multi-identity:
+      - Existing SSH configuration: {{ existing_ssh_config }}
+      - Existing SSH keys: {{ existing_ssh_keys.stdout | default('none') }}
+      - GitHub configuration: multi-identity
+      - SSH multi-identity: {{ configure_ssh_multi_identity }}
+      
+      This will create a broken state where Git expects multiple SSH keys but SSH multi-identity is not enabled.
+      
+      To fix this, choose one of the following:
+      
+      1. Enable SSH multi-identity (recommended):
+         configure_ssh_multi_identity: true
+         configure_github_multi_identity: true
+      
+      2. Use single identity for both:
+         configure_ssh_single_identity: true
+         configure_github_single_identity: true
+      
+      3. If you have existing SSH keys with different names, consider:
+         - Renaming them to match the expected format (id_ed25519_{{ github_personal_ssh_host | default('personal') }}, id_ed25519_{{ github_work_ssh_host | default('work') }})
+         - Or enabling SSH multi-identity to generate new keys
+  when: 
+    - configure_github_multi_identity | default(false)
+    - not configure_ssh_multi_identity | default(false)
+    - existing_ssh_config in ["single", "none", "multiple_other"]
+
+- name: Fail on GitHub multi-identity with no SSH configuration
+  fail:
+    msg: |
+      Configuration error detected!
+      
+      You are configuring GitHub multi-identity but have no SSH configuration enabled:
+      - Existing SSH configuration: {{ existing_ssh_config }}
+      - Existing SSH keys: {{ existing_ssh_keys.stdout | default('none') }}
+      - GitHub configuration: multi-identity
+      - SSH single identity: {{ configure_ssh_single_identity | default(false) }}
+      - SSH multi-identity: {{ configure_ssh_multi_identity | default(false) }}
+      
+      GitHub multi-identity requires SSH configuration to work properly.
+      
+      To fix this, choose one of the following:
+      
+      1. Enable SSH multi-identity (recommended for GitHub multi-identity):
+         configure_ssh_multi_identity: true
+         configure_github_multi_identity: true
+      
+      2. Use single identity for both:
+         configure_ssh_single_identity: true
+         configure_github_single_identity: true
+      
+      3. Disable GitHub multi-identity if you don't need it:
+         configure_github_multi_identity: false
+  when: 
+    - configure_github_multi_identity | default(false)
+    - not configure_ssh_single_identity | default(false)
+    - not configure_ssh_multi_identity | default(false)
+
+- name: Warn about existing multi SSH keys with GitHub single identity
+  debug:
+    msg: |
+      WARNING: Configuration mismatch detected!
+      
+      You have existing multiple SSH keys but are configuring GitHub single identity:
+      - Existing SSH configuration: {{ existing_ssh_config }}
+      - GitHub configuration: single-identity
+      
+      This will work, but you may have unused SSH keys.
+      Consider using GitHub multi-identity to utilize all your SSH keys.
+  when: 
+    - configure_github_single_identity | default(false)
+    - existing_ssh_config == "multi"
+
+- name: Warn about GitHub single identity with no SSH configuration
+  debug:
+    msg: |
+      WARNING: Configuration notice!
+      
+      You are configuring GitHub single identity but have no SSH configuration enabled:
+      - Existing SSH configuration: {{ existing_ssh_config }}
+      - GitHub configuration: single-identity
+      - SSH single identity: {{ configure_ssh_single_identity | default(false) }}
+      - SSH multi-identity: {{ configure_ssh_multi_identity | default(false) }}
+      
+      This will work, but you'll need to manually configure SSH keys for GitHub authentication.
+      Consider enabling SSH single identity for automatic SSH key generation.
+  when: 
+    - configure_github_single_identity | default(false)
+    - not configure_ssh_single_identity | default(false)
+    - not configure_ssh_multi_identity | default(false)
+
+- name: Validate GitHub multi-identity requirements
+  fail:
+    msg: |
+      Missing required configuration for GitHub multi-identity!
+      
+      The following variables must be set when configure_github_multi_identity is true:
+      - github_personal_email
+      - github_work_email
+      - git_personal_name
+      - git_work_name
+      
+      Please configure these variables in your config.yml file.
+  when: 
+    - configure_github_multi_identity | default(false)
+    - (github_personal_email is not defined or github_work_email is not defined or git_personal_name is not defined or git_work_name is not defined)
+
+- name: Show configuration summary
+  debug:
+    msg: |
+      Configuration validation passed!
+      
+      SSH Configuration:
+      - Single identity: {{ configure_ssh_single_identity | default(false) }}
+      - Multi-identity: {{ configure_ssh_multi_identity | default(false) }}
+      
+      GitHub Configuration:
+      - Single identity: {{ configure_github_single_identity | default(false) }}
+      - Multi-identity: {{ configure_github_multi_identity | default(false) }}
+      
+      Existing SSH Keys: {{ existing_ssh_config | default('not checked') }}
+      {% if existing_ssh_keys.stdout is defined and existing_ssh_keys.stdout != '' %}
+      SSH Key Files: {{ existing_ssh_keys.stdout.split('\n') | join(', ') }}
+      {% endif %}
+      
+      Proceeding with setup... 

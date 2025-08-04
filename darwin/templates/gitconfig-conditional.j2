@@ -1,0 +1,14 @@
+[user]
+    # Default configuration (for {{ github_default_ssh_account | default('personal') }} repositories)
+    name = {{ git_personal_name | default('Your Personal Name') if github_default_ssh_account | default('personal') == 'personal' else git_work_name | default('Your Work Name') }}
+    email = {{ github_personal_email | default('your-personal-email@example.com') if github_default_ssh_account | default('personal') == 'personal' else github_work_email | default('your-work-email@company.com') }}
+
+{% if github_default_ssh_account | default('personal') == 'personal' %}
+# Conditional configuration for work repositories
+[includeIf "gitdir:{{ github_work_directory | default('~/repositories/work/') }}"]
+    path = ~/.gitconfig_work
+{% else %}
+# Conditional configuration for personal repositories
+[includeIf "gitdir:{{ github_personal_directory | default('~/repositories/personal/') }}"]
+    path = ~/.gitconfig_personal
+{% endif %}

@@ -1,0 +1,36 @@
+---
+# Dock Configuration
+- name: Check if dockutil is installed
+  command: which dockutil
+  register: dockutil_check
+  changed_when: false
+  failed_when: false
+
+- name: Install dockutil via Homebrew
+  homebrew:
+    name: dockutil
+    state: present
+  when: dockutil_check.rc != 0
+  become: false
+
+- name: Remove items from Dock
+  command: "dockutil --remove '{{ item }}' --no-restart"
+  loop: "{{ dockitems_remove | default([]) }}"
+  when: dockitems_remove | default([]) | length > 0
+  register: dock_remove
+  changed_when: dock_remove.rc == 0
+  failed_when: false
+
+- name: Add items to Dock
+  command: "dockutil --add '{{ item.path }}' --position {{ item.pos | default('end') }} --no-restart"
+  loop: "{{ dockitems_persist | default([]) }}"
+  when: dockitems_persist | default([]) | length > 0
+  register: dock_add
+  changed_when: dock_add.rc == 0
+  failed_when: false
+
+- name: Restart Dock
+  command: killall Dock
+  when: (dockitems_remove | default([]) | length > 0) or (dockitems_persist | default([]) | length > 0)
+  changed_when: true
+  failed_when: false 

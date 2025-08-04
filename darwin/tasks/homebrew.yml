@@ -1,0 +1,61 @@
+---
+# Homebrew Installation and Package Management
+- name: Check if Homebrew is installed (Intel)
+  stat:
+    path: /usr/local/bin/brew
+  register: homebrew_check_intel
+
+- name: Check if Homebrew is installed (Apple Silicon)
+  stat:
+    path: /opt/homebrew/bin/brew
+  register: homebrew_check_apple
+
+- name: Set Homebrew installation status and path
+  set_fact:
+    homebrew_installed: "{{ homebrew_check_intel.stat.exists or homebrew_check_apple.stat.exists }}"
+    homebrew_path: "{{ '/opt/homebrew/bin/brew' if homebrew_check_apple.stat.exists else '/usr/local/bin/brew' }}"
+
+- name: Install Homebrew
+  shell: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  when: not homebrew_installed
+  environment:
+    NONINTERACTIVE: "1"
+  become: true
+
+- name: Add Homebrew to PATH
+  lineinfile:
+    path: ~/.zshrc
+    line: 'eval "$({{ homebrew_path }} shellenv)"'
+    state: present
+  when: not homebrew_installed
+
+- name: Source Homebrew environment
+  shell: |
+    eval "$({{ homebrew_path }} shellenv)"
+  changed_when: false
+
+- name: Update Homebrew
+  homebrew:
+    update_homebrew: yes
+  become: false
+
+- name: Install Homebrew taps
+  homebrew_tap:
+    name: "{{ item }}"
+  loop: "{{ homebrew_taps | default([]) }}"
+  become: false
+
+- name: Install Homebrew packages
+  homebrew:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ homebrew_installed_packages | default([]) }}"
+  become: false
+
+- name: Install Homebrew cask applications
+  homebrew_cask:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ homebrew_cask_apps | default([]) }}"
+  become: false 

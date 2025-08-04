@@ -1,0 +1,47 @@
+---
+# Single GitHub Identity Configuration and Testing
+- name: Configure Git with user information
+  git_config:
+    name: "user.name"
+    scope: global
+    value: "{{ git_name | default('Your Name') }}"
+  when: configure_github_single_identity | default(false)
+
+- name: Configure Git with email
+  git_config:
+    name: "user.email"
+    scope: global
+    value: "{{ github_email | default('your-email@example.com') }}"
+  when: configure_github_single_identity | default(false)
+
+- name: Test GitHub SSH connection (optional)
+  command: ssh -T git@github.com
+  register: github_ssh_test
+  changed_when: false
+  failed_when: false
+  when: configure_github_single_identity | default(false) and test_github_connection | default(false)
+
+- name: Display GitHub SSH test result
+  debug:
+    msg: "{{ github_ssh_test.stdout }}"
+  when: configure_github_single_identity | default(false) and test_github_connection | default(false) and github_ssh_test.rc == 1
+
+- name: Show GitHub single identity setup completion
+  debug:
+    msg: |
+      GitHub single identity setup complete!
+      
+      To add your SSH key to GitHub:
+      
+      1. Go to GitHub.com → Settings → SSH and GPG keys → New SSH key
+      2. Paste your SSH public key (run 'cat ~/.ssh/id_ed25519.pub' to see it)
+      3. Give it a descriptive title like "Personal Mac"
+      4. Click "Add SSH key"
+      
+      After adding the key to GitHub, you can test the connection with:
+      ssh -T git@github.com
+      
+      Your Git configuration is now set up with:
+      - Name: {{ git_name | default('Your Name') }}
+      - Email: {{ github_email | default('your-email@example.com') }}
+  when: configure_github_single_identity | default(false) 

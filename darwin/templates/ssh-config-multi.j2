@@ -1,0 +1,33 @@
+{% if include_host_star | default(true) %}
+# Global defaults
+Host *
+    AddKeysToAgent yes
+    UseKeychain yes
+    IdentitiesOnly yes
+
+{% endif %}
+{% if github_default_ssh_account | default('personal') == 'personal' %}
+# Personal GitHub (default)
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    
+# Work GitHub account
+Host {{ github_work_ssh_host | default('work') }}
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_{{ github_work_ssh_host | default('work') }}
+{% else %}
+# Work GitHub (default)
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    
+# Personal GitHub account
+Host {{ github_personal_ssh_host | default('personal') }}
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_{{ github_personal_ssh_host | default('personal') }}
+{% endif %}

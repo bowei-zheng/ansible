@@ -1,0 +1,66 @@
+---
+# Multi-Identity SSH Configuration
+- name: Check if SSH config exists
+  stat:
+    path: ~/.ssh/config
+  register: ssh_config_exists
+
+- name: Backup existing SSH config
+  copy:
+    src: ~/.ssh/config
+    dest: ~/.ssh/config.backup.{{ ansible_date_time.epoch }}
+    remote_src: yes
+  when: ssh_config_exists.stat.exists
+
+- name: Notify about SSH config backup
+  debug:
+    msg: |
+      {% if ssh_config_exists.stat.exists %}Existing SSH config backed up to ~/.ssh/config.backup.{{ ansible_date_time.epoch }}
+      Generating fresh SSH config for multi-identity setup.{% else %}Creating new SSH config for multi-identity setup.{% endif %}
+
+- name: Create SSH config with multi-identity configuration
+  template:
+    src: ssh-config-multi.j2
+    dest: ~/.ssh/config
+    mode: '0600'
+
+- name: Generate personal SSH key
+  openssh_keypair:
+    path: ~/.ssh/{{ 'id_ed25519' if github_default_ssh_account == 'personal' else 'id_ed25519_' + github_personal_ssh_host | default('personal') }}
+    type: ed25519
+    comment: "{{ github_personal_email }}"
+    state: present
+
+- name: Generate work SSH key
+  openssh_keypair:
+    path: ~/.ssh/{{ 'id_ed25519' if github_default_ssh_account == 'work' else 'id_ed25519_' + github_work_ssh_host | default('work') }}
+    type: ed25519
+    comment: "{{ github_work_email }}"
+    state: present
+
+- name: Add SSH keys to agent
+  shell: ssh-add ~/.ssh/{{ item }}
+  with_items:
+    - "{{ 'id_ed25519' if github_default_ssh_account == 'personal' else 'id_ed25519_' + github_personal_ssh_host | default('personal') }}"
+    - "{{ 'id_ed25519' if github_default_ssh_account == 'work' else 'id_ed25519_' + github_work_ssh_host | default('work') }}"
+  changed_when: false
+
+- name: Read personal SSH public key
+  slurp:
+    src: ~/.ssh/{{ 'id_ed25519' if github_default_ssh_account == 'personal' else 'id_ed25519_' + github_personal_ssh_host | default('personal') }}.pub
+  register: personal_ssh_key
+
+- name: Read work SSH public key
+  slurp:
+    src: ~/.ssh/{{ 'id_ed25519' if github_default_ssh_account == 'work' else 'id_ed25519_' + github_work_ssh_host | default('work') }}.pub
+  register: work_ssh_key
+
+- name: Show multi-identity SSH setup completion
+  debug:
+    msg: |
+      Multiple SSH keys have been generated successfully!
+      
+      Personal SSH key: {{ personal_ssh_key.content | b64decode }}
+      Work SSH key: {{ work_ssh_key.content | b64decode }}
+      
+      SSH keys have been added to your SSH agent and multi-identity configuration is complete. 

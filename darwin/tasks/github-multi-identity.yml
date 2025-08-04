@@ -1,0 +1,58 @@
+---
+# Multiple GitHub Identity Configuration
+- name: Configure Git with conditional configuration for multiple identities
+  template:
+    src: gitconfig-conditional.j2
+    dest: ~/.gitconfig
+    mode: '0644'
+  when: configure_github_multi_identity | default(false)
+
+- name: Create work-specific Git configuration file
+  template:
+    src: gitconfig-work.j2
+    dest: ~/.gitconfig_work
+    mode: '0644'
+  when: configure_github_multi_identity | default(false)
+
+- name: Create personal-specific Git configuration file
+  template:
+    src: gitconfig-personal.j2
+    dest: ~/.gitconfig_personal
+    mode: '0644'
+  when: configure_github_multi_identity | default(false)
+
+- name: Show completion message for multi-identity setup
+  debug:
+    msg: |
+      Multiple GitHub identity setup complete!
+      
+      Git configuration has been set up for both personal and work accounts.
+      
+      You need to add different SSH keys to each GitHub account:
+      
+      1. Add to your personal GitHub account ({{ github_personal_email }}):
+         - Go to GitHub.com → Settings → SSH and GPG keys → New SSH key
+         - Paste your personal SSH key (run 'cat ~/.ssh/{{ "id_ed25519" if github_default_ssh_account == "personal" else "id_ed25519_" + github_personal_ssh_host | default("personal") }}.pub' to see it)
+         - Give it a descriptive title like "Personal Mac"
+         - Click Add SSH key
+      
+      2. Add to your work GitHub account ({{ github_work_email }}):
+         - Go to GitHub.com → Settings → SSH and GPG keys → New SSH key
+         - Paste your work SSH key (run 'cat ~/.ssh/{{ "id_ed25519" if github_default_ssh_account == "work" else "id_ed25519_" + github_work_ssh_host | default("work") }}.pub' to see it)
+         - Give it a descriptive title like "Work Mac"
+         - Click Add SSH key
+      
+      Test your connections:
+      Personal: ssh -T git@{{ 'github.com' if github_default_ssh_account == 'personal' else github_personal_ssh_host | default('personal') }}
+      Work: ssh -T git@{{ 'github.com' if github_default_ssh_account == 'work' else github_work_ssh_host | default('work') }}
+      
+      When cloning repositories, use:
+      Personal: git clone git@{{ 'github.com' if github_default_ssh_account == 'personal' else github_personal_ssh_host | default('personal') }}:username/repo.git
+      Work: git clone git@{{ 'github.com' if github_default_ssh_account == 'work' else github_work_ssh_host | default('work') }}:organization/repo.git
+      
+      The setup will automatically use the appropriate email based on the directory:
+      {% if github_default_ssh_account | default('personal') == 'personal' %}- Work repositories: {{ github_work_directory | default('~/repositories/work/') }}{% endif %}
+      {% if github_default_ssh_account | default('personal') == 'personal' %}- Personal repositories: All other directories (default behavior){% endif %}
+      {% if github_default_ssh_account | default('personal') == 'work' %}- Personal repositories: {{ github_personal_directory | default('~/repositories/personal/') }}{% endif %}
+      {% if github_default_ssh_account | default('personal') == 'work' %}- Work repositories: All other directories (default behavior){% endif %}
+  when: configure_github_multi_identity | default(false) 
