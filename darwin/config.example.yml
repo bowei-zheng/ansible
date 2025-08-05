@@ -17,6 +17,8 @@ dockitems_persist: []
 # Homebrew packages to install
 homebrew_installed_packages:
   - git
+  - awscli
+  - aws-vault
 
 homebrew_taps: []
 
@@ -61,4 +63,22 @@ github_work_ssh_host: "work"
 # SSH Key Configuration
 # Set to 'personal' to use personal account with default SSH key (~/.ssh/id_ed25519)
 # Set to 'work' to use work account with default SSH key (~/.ssh/id_ed25519)
-github_default_ssh_account: "personal" 
+github_default_ssh_account: "personal"
+
+# AWS Vault Configuration
+# Set to 'true' to configure AWS Vault with SSO profiles
+configure_aws_vault: false
+
+# AWS SSO Configuration
+aws_sso_region: "us-east-1"
+aws_sso_start_url: "https://my-sso-portal.awsapps.com/start"
+aws_sso_session_name: "my-sso"
+
+# AWS Profiles to configure
+aws_profiles:
+  - name: "dev"
+    sso_account_id: "111122223333"
+    sso_role_name: "SampleRole"
+  - name: "prod"
+    sso_account_id: "111122223333"
+    sso_role_name: "SampleRole2"
