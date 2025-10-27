@@ -44,6 +44,11 @@
     executable: "{{ pipx_path }}"
   register: poetry_install
 
+- name: Install poetry-plugin-export with pipx inject
+  shell: "{{ pipx_path }} inject poetry poetry-plugin-export"
+  register: poetry_plugin_export_install
+  changed_when: poetry_plugin_export_install.rc == 0
+
 - name: Install tox with pipx
   community.general.pipx:
     name: tox
@@ -127,8 +132,8 @@
 
 - name: Display installation results
   debug:
-    msg: "Python tools installed successfully: pyenv={{ pyenv_install.changed | default(false) }}, poetry={{ poetry_install.changed }}, tox={{ tox_install.changed }}"
-  when: poetry_install is defined and tox_install is defined
+    msg: "Python tools installed successfully: pyenv={{ pyenv_install.changed | default(false) }}, poetry={{ poetry_install.changed }}, tox={{ tox_install.changed }}, poetry-plugin-export={{ poetry_plugin_export_install.changed | default(false) }}"
+  when: poetry_install is defined and poetry_plugin_export_install is defined and tox_install is defined 
 
 - name: Display pyenv configuration results
   debug:
