@@ -61,4 +61,19 @@ github_work_ssh_host: "work"
 # SSH Key Configuration
 # Set to 'personal' to use personal account with default SSH key (~/.ssh/id_ed25519)
 # Set to 'work' to use work account with default SSH key (~/.ssh/id_ed25519)
-github_default_ssh_account: "personal" 
+github_default_ssh_account: "personal"
+
+# Python Environment Configuration
+# Set to 'true' to configure Python development tools (pyenv, pipx, poetry, tox)
+configure_python: false
+
+# pyenv Configuration
+# Python versions to install with pyenv (optional)
+# Examples: "3.11.5", "3.12.0", "3.10.12"
+pyenv_python_versions:
+  - "3.11.5"
+  - "3.12.0"
+
+# Global Python version to set (optional)
+# This will be the default Python version used system-wide
+pyenv_global_version: "3.11.5"

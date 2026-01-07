@@ -40,4 +40,8 @@
 
     - import_tasks: tasks/github-multi-identity.yml
       when: configure_github_multi_identity
-      tags: ['github', 'github-multi-identity'] 
+      tags: ['github', 'github-multi-identity']
+
+    - import_tasks: tasks/python.yml
+      when: configure_python
+      tags: ['python']

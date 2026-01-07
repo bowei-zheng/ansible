@@ -1,0 +1,170 @@
+---
+# Python Environment Setup
+
+# Install uv via Homebrew
+- name: Install uv via Homebrew
+  homebrew:
+    name: uv
+    state: present
+  register: uv_install
+
+- name: Verify uv installation
+  command: uv --version
+  register: uv_version_check
+  changed_when: false
+
+# Install pyenv via Homebrew
+- name: Install pyenv via Homebrew
+  homebrew:
+    name: pyenv
+    state: present
+  register: pyenv_install
+
+- name: Verify pyenv installation
+  shell: pyenv --version
+  register: pyenv_version_check
+  changed_when: false
+  when: pyenv_install.changed
+
+# Install pipx via Homebrew
+- name: Install pipx via Homebrew
+  homebrew:
+    name: pipx
+    state: present
+
+- name: Check which pipx path exists
+  stat:
+    path: "{{ item }}"
+  loop:
+    - /usr/local/bin/pipx
+    - /opt/homebrew/bin/pipx
+  register: pipx_path_check
+
+- name: Set pipx path
+  set_fact:
+    pipx_path: "{{ '/opt/homebrew/bin/pipx' if pipx_path_check.results[1].stat.exists else '/usr/local/bin/pipx' }}"
+
+- name: Verify pipx is working
+  command: "{{ pipx_path }} --version"
+  register: pipx_version_check
+  changed_when: false
+
+- name: Install poetry with pipx
+  community.general.pipx:
+    name: poetry
+    state: latest
+    executable: "{{ pipx_path }}"
+  register: poetry_install
+
+- name: Install poetry-plugin-export with pipx inject
+  shell: "{{ pipx_path }} inject poetry poetry-plugin-export"
+  register: poetry_plugin_export_install
+  changed_when: poetry_plugin_export_install.rc == 0
+
+- name: Install tox with pipx
+  community.general.pipx:
+    name: tox
+    state: latest
+    executable: "{{ pipx_path }}"
+  register: tox_install
+
+# pyenv shell environment setup
+- name: Backup existing .zshrc
+  copy:
+    src: ~/.zshrc
+    dest: ~/.zshrc.backup.{{ ansible_date_time.epoch }}
+    remote_src: yes
+    backup: yes
+  when: ansible_user_id != 'root'
+
+- name: Check if pyenv is already configured in .zshrc
+  shell: grep -q "pyenv init" ~/.zshrc || echo "not_found"
+  register: pyenv_zshrc_check
+  changed_when: false
+  when: ansible_user_id != 'root'
+
+- name: Add pyenv configuration to .zshrc
+  blockinfile:
+    path: ~/.zshrc
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - pyenv configuration"
+    block: |
+      # pyenv configuration
+      # This configuration enables pyenv to manage Python versions
+      
+      # Set up pyenv root directory
+      export PYENV_ROOT="$HOME/.pyenv"
+      
+      # Add pyenv to PATH
+      export PATH="$PYENV_ROOT/bin:$PATH"
+      
+      # Initialize pyenv shell integration
+      if command -v pyenv 1>/dev/null 2>&1; then
+        eval "$(pyenv init -)"
+      fi
+      
+      # Fix brew doctor warning: prevent pyenv from interfering with Homebrew
+      # This alias removes pyenv shims from PATH when running brew commands
+      alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
+  when: 
+    - ansible_user_id != 'root'
+    - pyenv_zshrc_check.stdout == 'not_found'
+  register: zshrc_updated
+
+
+
+# Check if Python versions are already installed
+- name: Check if Python versions are already installed
+  shell: pyenv versions --bare | grep -q "^{{ item }}$" || echo "not_installed"
+  loop: "{{ pyenv_python_versions | default([]) }}"
+  when: 
+    - pyenv_python_versions is defined
+    - pyenv_python_versions | length > 0
+  register: python_version_checks
+  changed_when: false
+
+# Install Python versions if specified and not already installed
+- name: Install specified Python versions with pyenv
+  shell: pyenv install {{ item.item }}
+  loop: "{{ python_version_checks.results | default([]) }}"
+  when: 
+    - python_version_checks is defined
+    - item.stdout == "not_installed"
+  register: python_install_results
+
+# Set global Python version if specified
+- name: Set global Python version
+  shell: pyenv global {{ pyenv_global_version }}
+  when: pyenv_global_version is defined
+  register: global_python_set
+
+# Rehash pyenv shims after installations
+- name: Rehash pyenv shims
+  shell: pyenv rehash
+  when: python_install_results is defined and python_install_results.results | length > 0
+
+- name: Display installation results
+  debug:
+    msg: "Python tools installed successfully: pyenv={{ pyenv_install.changed | default(false) }}, uv={{ uv_install.changed | default(false) }}, poetry={{ poetry_install.changed }}, tox={{ tox_install.changed }}, poetry-plugin-export={{ poetry_plugin_export_install.changed | default(false) }}"
+  when: poetry_install is defined and poetry_plugin_export_install is defined and tox_install is defined 
+
+- name: Display pyenv configuration results
+  debug:
+    msg: "pyenv configuration: .zshrc updated={{ zshrc_updated.changed | default(false) }}"
+  when: zshrc_updated is defined
+
+- name: Display pyenv version
+  debug:
+    msg: "pyenv version: {{ pyenv_version_check.stdout | default('not available') }}"
+  when: pyenv_version_check is defined and pyenv_version_check.stdout is defined
+
+- name: Display uv version
+  debug:
+    msg: "uv version: {{ uv_version_check.stdout | default('not available') }}"
+  when: uv_version_check is defined and uv_version_check.stdout is defined
+
+- name: Display Python installation results
+  debug:
+    msg: "Python {{ item.item }}: {{ 'installed' if item.stdout != 'not_installed' else 'already exists' }}"
+  loop: "{{ python_version_checks.results | default([]) }}"
+  when: python_version_checks is defined
+  
