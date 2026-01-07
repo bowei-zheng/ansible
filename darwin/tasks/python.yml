@@ -1,6 +1,18 @@
 ---
 # Python Environment Setup
 
+# Install uv via Homebrew
+- name: Install uv via Homebrew
+  homebrew:
+    name: uv
+    state: present
+  register: uv_install
+
+- name: Verify uv installation
+  command: uv --version
+  register: uv_version_check
+  changed_when: false
+
 # Install pyenv via Homebrew
 - name: Install pyenv via Homebrew
   homebrew:
@@ -132,7 +144,7 @@
 
 - name: Display installation results
   debug:
-    msg: "Python tools installed successfully: pyenv={{ pyenv_install.changed | default(false) }}, poetry={{ poetry_install.changed }}, tox={{ tox_install.changed }}, poetry-plugin-export={{ poetry_plugin_export_install.changed | default(false) }}"
+    msg: "Python tools installed successfully: pyenv={{ pyenv_install.changed | default(false) }}, uv={{ uv_install.changed | default(false) }}, poetry={{ poetry_install.changed }}, tox={{ tox_install.changed }}, poetry-plugin-export={{ poetry_plugin_export_install.changed | default(false) }}"
   when: poetry_install is defined and poetry_plugin_export_install is defined and tox_install is defined 
 
 - name: Display pyenv configuration results
@@ -144,6 +156,11 @@
   debug:
     msg: "pyenv version: {{ pyenv_version_check.stdout | default('not available') }}"
   when: pyenv_version_check is defined and pyenv_version_check.stdout is defined
+
+- name: Display uv version
+  debug:
+    msg: "uv version: {{ uv_version_check.stdout | default('not available') }}"
+  when: uv_version_check is defined and uv_version_check.stdout is defined
 
 - name: Display Python installation results
   debug:
