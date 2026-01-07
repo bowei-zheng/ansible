@@ -45,3 +45,7 @@
     - import_tasks: tasks/python.yml
       when: configure_python
       tags: ['python']
+
+    - import_tasks: tasks/aws-vault.yml
+      when: configure_aws_vault
+      tags: ['aws', 'aws-vault'] 

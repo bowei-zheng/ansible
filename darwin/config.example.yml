@@ -17,6 +17,8 @@ dockitems_persist: []
 # Homebrew packages to install
 homebrew_installed_packages:
   - git
+  - awscli
+  - aws-vault
 
 homebrew_taps: []
 
@@ -77,3 +79,21 @@ pyenv_python_versions:
 # Global Python version to set (optional)
 # This will be the default Python version used system-wide
 pyenv_global_version: "3.11.5"
+
+# AWS Vault Configuration
+# Set to 'true' to configure AWS Vault with SSO profiles
+configure_aws_vault: false
+
+# AWS SSO Configuration
+aws_sso_region: "us-east-1"
+aws_sso_start_url: "https://my-sso-portal.awsapps.com/start"
+aws_sso_session_name: "my-sso"
+
+# AWS Profiles to configure
+aws_profiles:
+  - name: "dev"
+    sso_account_id: "111122223333"
+    sso_role_name: "SampleRole"
+  - name: "prod"
+    sso_account_id: "111122223333"
+    sso_role_name: "SampleRole2"
