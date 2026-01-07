@@ -1,0 +1,62 @@
+---
+# Cursor Plugin Management (Self-contained and Idempotent)
+- name: Check if Cursor is installed
+  stat:
+    path: /Applications/Cursor.app
+  register: cursor_installed
+
+- name: Create Cursor extensions directory if it doesn't exist
+  file:
+    path: "{{ ansible_env.HOME }}/.cursor/extensions"
+    state: directory
+    mode: '0755'
+  when: cursor_installed.stat.exists
+
+- name: Get list of currently installed Cursor extensions
+  shell: |
+    /Applications/Cursor.app/Contents/Resources/app/bin/code \
+      --list-extensions \
+      --user-data-dir "{{ ansible_env.HOME }}/.cursor" 2>/dev/null || echo ""
+  when: cursor_installed.stat.exists
+  register: installed_extensions
+  changed_when: false
+  become: false
+
+- name: Set fact for installed extensions list
+  set_fact:
+    current_extensions: "{{ installed_extensions.stdout_lines | default([]) }}"
+  when: cursor_installed.stat.exists
+
+- name: Create list of extensions to install
+  set_fact:
+    extensions_to_install: "{{ cursor_plugins | default([]) | select('string') | list | difference(current_extensions) }}"
+  when: cursor_installed.stat.exists
+
+- name: Install Cursor plugins/extensions (only if not already installed)
+  shell: |
+    /Applications/Cursor.app/Contents/Resources/app/bin/code \
+      --install-extension "{{ item }}" \
+      --user-data-dir "{{ ansible_env.HOME }}/.cursor"
+  loop: "{{ extensions_to_install }}"
+  when: 
+    - cursor_installed.stat.exists
+    - extensions_to_install | length > 0
+  become: false
+  register: extension_install_results
+
+- name: Display extension installation results
+  debug:
+    msg: "Installed extension: {{ item.item }}"
+  loop: "{{ extension_install_results.results | default([]) }}"
+  when: 
+    - item.changed is defined
+    - item.changed
+    - item.rc == 0
+
+- name: Display skipped extensions
+  debug:
+    msg: "Extension already installed: {{ item }}"
+  loop: "{{ current_extensions | intersect(cursor_plugins | default([])) }}"
+  when: 
+    - cursor_installed.stat.exists
+    - cursor_plugins is defined 

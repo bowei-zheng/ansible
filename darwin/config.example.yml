@@ -97,3 +97,13 @@ aws_profiles:
   - name: "prod"
     sso_account_id: "111122223333"
     sso_role_name: "SampleRole2"
+
+# Cursor Plugin Configuration
+# Set to 'true' to configure Cursor plugins/extensions
+configure_cursor_plugins: false
+
+# Cursor plugins/extensions to install (simple list of extension IDs)
+cursor_plugins:
+  - "ms-python.python"                    # Python support
+  - "ms-azuretools.vscode-docker"         # Docker support
+  - "eamodio.gitlens"                     # Git supercharged
