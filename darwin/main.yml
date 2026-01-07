@@ -42,6 +42,15 @@
       when: configure_github_multi_identity
       tags: ['github', 'github-multi-identity']
 
+    - import_tasks: tasks/python.yml
+      when: configure_python
+      tags: ['python']
+
+    - import_tasks: tasks/aws-vault.yml
+      when: configure_aws_vault
+      tags: ['aws', 'aws-vault'] 
+      tags: ['github', 'github-multi-identity']
+
     - import_tasks: tasks/cursor-plugins.yml
       when: configure_cursor_plugins
       tags: ['cursor', 'cursor-plugins']
