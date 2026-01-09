@@ -54,3 +54,7 @@
     - import_tasks: tasks/cursor-plugins.yml
       when: configure_cursor_plugins
       tags: ['cursor', 'cursor-plugins']
+
+    - import_tasks: tasks/ngrok.yml
+      when: configure_ngrok
+      tags: ['ngrok']

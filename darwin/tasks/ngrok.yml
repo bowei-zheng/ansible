@@ -1,0 +1,57 @@
+---
+# ngrok Configuration
+
+- name: Install ngrok via Homebrew
+  community.general.homebrew:
+    name: ngrok
+    state: present
+
+- name: Validate ngrok configuration
+  assert:
+    that:
+      - ngrok_authtoken is defined
+      - ngrok_authtoken | length > 0
+    fail_msg: |
+      ngrok configuration is incomplete. Please ensure the following are defined in config.yml:
+      - ngrok_authtoken (your ngrok authentication token from https://dashboard.ngrok.com)
+    success_msg: "ngrok configuration validation passed"
+
+- name: Ensure ngrok config directory exists
+  file:
+    path: ~/Library/Application Support/ngrok
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+  register: ngrok_dir_created
+
+- name: Configure ngrok config file
+  template:
+    src: ngrok-config.j2
+    dest: ~/Library/Application Support/ngrok/ngrok.yml
+    mode: '0600'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    backup: yes
+  register: ngrok_config_created
+
+- name: Display ngrok configuration summary
+  debug:
+    msg: |
+      ngrok configuration completed:
+      - Config directory: ~/Library/Application Support/ngrok
+      - Config file: {{ 'Created' if ngrok_config_created.changed else 'Already exists' }}
+      {% if ngrok_config_created.backup_file is defined %}
+      - Previous config backed up to: {{ ngrok_config_created.backup_file }}
+      {% endif %}
+      {% if ngrok_tunnels is defined and ngrok_tunnels | length > 0 %}
+      - Configured tunnels: {{ ngrok_tunnels | map(attribute='name') | list }}
+      {% endif %}
+      
+      To start ngrok:
+      - Simple HTTP tunnel: ngrok http 8080
+      {% if ngrok_tunnels is defined and ngrok_tunnels | length > 0 %}
+      - Start a defined tunnel: ngrok start <tunnel-name>
+      - Start all tunnels: ngrok start --all
+      {% endif %}
+

@@ -107,3 +107,20 @@ cursor_plugins:
   - "ms-python.python"                    # Python support
   - "ms-azuretools.vscode-docker"         # Docker support
   - "eamodio.gitlens"                     # Git supercharged
+
+# ngrok Configuration
+# Set to 'true' to configure ngrok
+configure_ngrok: false
+
+# ngrok authentication token (get from https://dashboard.ngrok.com/get-started/your-authtoken)
+ngrok_authtoken: "YOUR_NGROK_AUTHTOKEN_HERE"
+
+# Optional: Define persistent tunnels
+ngrok_tunnels:
+  - name: "webapp"
+    proto: "http"
+    addr: "8080"
+#   domain: "optional-custom-domain.ngrok.io"
+  - name: "api"
+    proto: "http"
+    addr: "3000"
