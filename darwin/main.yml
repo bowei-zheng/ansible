@@ -49,7 +49,6 @@
     - import_tasks: tasks/aws-vault.yml
       when: configure_aws_vault
       tags: ['aws', 'aws-vault'] 
-      tags: ['github', 'github-multi-identity']
 
     - import_tasks: tasks/cursor-plugins.yml
       when: configure_cursor_plugins
