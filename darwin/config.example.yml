@@ -26,6 +26,13 @@ homebrew_cask_appdir: /Applications
 homebrew_cask_apps:
   - docker
 
+# Homebrew packages to update to latest version (optional)
+homebrew_packages_to_update: []
+
+# Homebrew cask applications to update to latest version (optional)
+# Use greedy upgrade for casks with auto-update (e.g. cursor, google-chrome)
+homebrew_cask_apps_to_update: []
+
 # SSH configuration
 # Set to 'true' to configure basic SSH key generation (single identity)
 # Must be explicitly enabled - not automatically enabled by other settings
