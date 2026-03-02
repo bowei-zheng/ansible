@@ -58,4 +58,19 @@
     name: "{{ item }}"
     state: present
   loop: "{{ homebrew_cask_apps | default([]) }}"
-  become: false 
+  become: false
+
+- name: Update Homebrew packages to latest version
+  homebrew:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ homebrew_packages_to_update | default([]) }}"
+  become: false
+
+- name: Update Homebrew cask applications to latest version
+  homebrew_cask:
+    name: "{{ item }}"
+    state: latest
+    greedy: true
+  loop: "{{ homebrew_cask_apps_to_update | default([]) }}"
+  become: false
