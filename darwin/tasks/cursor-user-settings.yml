@@ -1,0 +1,69 @@
+---
+# Merge Ansible-managed keys into Cursor User settings.json (integrated terminals only).
+# Stops ms-python.python from auto-sourcing a venv unless the user opts in via settings.
+
+- name: Ensure Cursor User config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/Library/Application Support/Cursor/User"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+  when:
+    - cursor_installed is defined
+    - cursor_installed.stat.exists
+
+- name: Stat existing Cursor User settings.json
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/Library/Application Support/Cursor/User/settings.json"
+  register: cursor_user_settings_stat
+  when:
+    - cursor_installed is defined
+    - cursor_installed.stat.exists
+
+- name: Read existing Cursor User settings.json
+  ansible.builtin.slurp:
+    src: "{{ ansible_env.HOME }}/Library/Application Support/Cursor/User/settings.json"
+  register: cursor_user_settings_slurp
+  when:
+    - cursor_installed is defined
+    - cursor_installed.stat.exists
+    - cursor_user_settings_stat.stat.exists | default(false)
+
+- name: Initialize empty Cursor settings dict when no file
+  ansible.builtin.set_fact:
+    cursor_settings_existing: {}
+  when:
+    - cursor_installed is defined
+    - cursor_installed.stat.exists
+    - not (cursor_user_settings_stat.stat.exists | default(false))
+
+- name: Parse existing Cursor User settings.json
+  when:
+    - cursor_installed is defined
+    - cursor_installed.stat.exists
+    - cursor_user_settings_stat.stat.exists | default(false)
+  block:
+    - name: Load JSON from slurped file
+      ansible.builtin.set_fact:
+        cursor_settings_existing: "{{ cursor_user_settings_slurp.content | b64decode | from_json }}"
+  rescue:
+    - name: Report invalid JSON and merge into empty dict
+      ansible.builtin.debug:
+        msg: "Existing Cursor settings.json was not valid JSON; merging into an empty dict."
+    - name: Reset Cursor settings to empty dict after parse failure
+      ansible.builtin.set_fact:
+        cursor_settings_existing: {}
+
+- name: Render merged Cursor User settings.json
+  ansible.builtin.template:
+    src: cursor-user-settings.j2
+    dest: "{{ ansible_env.HOME }}/Library/Application Support/Cursor/User/settings.json"
+    mode: '0644'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    backup: true
+  when:
+    - cursor_installed is defined
+    - cursor_installed.stat.exists
+    - cursor_settings_existing is defined

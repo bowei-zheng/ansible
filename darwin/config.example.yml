@@ -115,6 +115,10 @@ cursor_plugins:
   - "ms-azuretools.vscode-docker"         # Docker support
   - "eamodio.gitlens"                     # Git supercharged
 
+Keys merged into Cursor User settings.json (optional; preserves other user keys)
+cursor_user_settings_managed:
+  python.terminal.activateEnvironment: false
+
 # ngrok Configuration
 # Set to 'true' to configure ngrok
 configure_ngrok: false

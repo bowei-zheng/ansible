@@ -1,0 +1,2 @@
+{# Merged Cursor User settings — Ansible template; keys merged from cursor_user_settings_managed in config.yml #}
+{{ cursor_settings_existing | combine(cursor_user_settings_managed | default({})) | to_nice_json }}
