@@ -1,0 +1,16 @@
+# --- Git branch in prompt (zsh vcs_info) ---
+# Shows current branch (and merge/rebase state) when cwd is inside a Git repo.
+# Colors come from shell_prompt_git_branch_color / shell_prompt_git_action_color in config.
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:*' check-for-changes false
+zstyle ':vcs_info:git:*' formats '(%F{ {{- shell_prompt_git_branch_color | default('green') -}} }%b%f)'
+zstyle ':vcs_info:git:*' actionformats '(%F{ {{- shell_prompt_git_action_color | default('yellow') -}} }%b|%a%f)'
+precmd_functions+=( precmd_vcs_info_ansible )
+precmd_vcs_info_ansible() {
+  vcs_info
+}
+# --- End Git / vcs_info ---
+
+setopt PROMPT_SUBST
+PROMPT='%n@%m %1~ ${vcs_info_msg_0_} %# '

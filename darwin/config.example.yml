@@ -72,6 +72,12 @@ github_work_ssh_host: "work"
 # Set to 'work' to use work account with default SSH key (~/.ssh/id_ed25519)
 github_default_ssh_account: "personal"
 
+# zsh prompt: current Git branch via vcs_info (marked block in ~/.zshrc)
+configure_shell_prompt: false
+# zsh %F{...} color name (e.g. green, cyan) or 0-255 for 256-color
+shell_prompt_git_branch_color: green
+shell_prompt_git_action_color: yellow
+
 # Python Environment Configuration
 # Set to 'true' to configure Python development tools (pyenv, pipx, poetry, tox)
 configure_python: false
@@ -115,7 +121,7 @@ cursor_plugins:
   - "ms-azuretools.vscode-docker"         # Docker support
   - "eamodio.gitlens"                     # Git supercharged
 
-Keys merged into Cursor User settings.json (optional; preserves other user keys)
+# Keys merged into Cursor User settings.json (optional; preserves other user keys)
 cursor_user_settings_managed:
   python.terminal.activateEnvironment: false
 

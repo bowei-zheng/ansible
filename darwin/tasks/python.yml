@@ -96,9 +96,10 @@
   when: ansible_user_id != 'root'
 
 - name: Add pyenv configuration to .zshrc
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: ~/.zshrc
     marker: "# {mark} ANSIBLE MANAGED BLOCK - pyenv configuration"
+    prepend_newline: true
     block: |
       # pyenv configuration
       # This configuration enables pyenv to manage Python versions

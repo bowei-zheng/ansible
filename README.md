@@ -28,6 +28,10 @@ ansible/
 └── README.md             # Documentation
 ```
 
+## Requirements
+
+- **ansible-core 2.16+** (for `ansible.builtin.blockinfile` options such as `prepend_newline` used when editing `~/.zshrc` on macOS). Older versions may lack these parameters.
+
 ## Quick Start
 
 1. Install Ansible:
