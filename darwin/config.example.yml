@@ -73,7 +73,7 @@ github_work_ssh_host: "work"
 github_default_ssh_account: "personal"
 
 # zsh prompt: current Git branch via vcs_info (marked block in ~/.zshrc)
-configure_shell_prompt: true
+configure_shell_prompt: false
 # zsh %F{...} color name (e.g. green, cyan) or 0-255 for 256-color
 shell_prompt_git_branch_color: green
 shell_prompt_git_action_color: yellow
