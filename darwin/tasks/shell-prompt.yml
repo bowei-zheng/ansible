@@ -5,6 +5,7 @@
     path: "{{ ansible_env.HOME }}/.zshrc"
     create: true
     marker: "# {mark} ANSIBLE MANAGED BLOCK - zsh prompt"
+    prepend_newline: true
     block: "{{ lookup('template', 'zsh-prompt.j2') | trim }}"
   when:
     - configure_shell_prompt | default(false)
