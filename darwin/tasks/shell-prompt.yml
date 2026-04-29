@@ -1,0 +1,20 @@
+---
+# Inject zsh vcs_info Git branch prompt into ~/.zshrc (lookup-rendered Jinja, no extra files).
+- name: Inject zsh Git branch prompt into .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    create: true
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - zsh prompt"
+    block: "{{ lookup('template', 'zsh-prompt.j2') | trim }}"
+  when:
+    - configure_shell_prompt | default(false)
+    - ansible_user_id != 'root'
+
+- name: Remove zsh Git branch prompt block from .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - zsh prompt"
+    state: absent
+  when:
+    - not (configure_shell_prompt | default(false))
+    - ansible_user_id != 'root'
