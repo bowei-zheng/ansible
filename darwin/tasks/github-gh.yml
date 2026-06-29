@@ -1,0 +1,41 @@
+---
+# gh CLI multi-identity: zsh wrapper selects account by directory (mirrors git includeIf).
+- name: Inject gh multi-identity wrapper into .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    create: true
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - gh multi-identity"
+    prepend_newline: true
+    block: "{{ lookup('template', 'zsh-gh-multi-identity.j2') | trim }}"
+  when:
+    - configure_github_multi_identity | default(false)
+    - ansible_user_id != 'root'
+
+- name: Remove gh multi-identity block from .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - gh multi-identity"
+    state: absent
+  when:
+    - not (configure_github_multi_identity | default(false))
+    - ansible_user_id != 'root'
+
+- name: Show gh CLI multi-identity setup instructions
+  debug:
+    msg: |
+      gh CLI multi-identity wrapper installed in ~/.zshrc.
+
+      Authenticate both GitHub accounts once (OAuth cannot be automated):
+
+        gh auth login    # log in as {{ github_personal_username }} (personal)
+        gh auth login    # log in as {{ github_work_username }} (work)
+
+      Verify:
+
+        gh auth status
+        cd {{ github_work_directory | default('~/repositories/work/') }} && gh api user -q .login
+        cd ~ && gh api user -q .login
+
+      Under {{ github_work_directory | default('~/repositories/work/') }}, gh uses {{ github_work_username }}.
+      Everywhere else, gh uses {{ github_personal_username }}.
+  when: configure_github_multi_identity | default(false)

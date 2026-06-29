@@ -1,0 +1,31 @@
+# --- gh CLI: directory-based GitHub account (default: personal) ---
+# Work tree: {{ github_work_directory | default('~/repositories/work/') }}
+{% set work_dir = github_work_directory | default('~/repositories/work/') | regex_replace('/$', '') | regex_replace('^~/', '') %}
+{% set personal_dir = github_personal_directory | default('~/repositories/personal/') | regex_replace('/$', '') | regex_replace('^~/', '') %}
+gh() {
+  local work_dir="$HOME/{{ work_dir }}"
+  local personal_user="{{ github_personal_username }}"
+  local work_user="{{ github_work_username }}"
+{% if github_default_ssh_account | default('personal') == 'personal' %}
+  local target_user="$personal_user"
+
+  if [[ "$PWD" == "$work_dir"* ]]; then
+    target_user="$work_user"
+  fi
+{% else %}
+  local personal_dir="$HOME/{{ personal_dir }}"
+  local target_user="$work_user"
+
+  if [[ "$PWD" == "$personal_dir"* ]]; then
+    target_user="$personal_user"
+  fi
+{% endif %}
+
+  local token
+  token=$(command gh auth token --user "$target_user" 2>/dev/null) || {
+    echo "gh: no token for GitHub user '$target_user' (run: gh auth login)" >&2
+    return 1
+  }
+  GH_TOKEN="$token" command gh "$@"
+}
+# --- End gh multi-identity ---

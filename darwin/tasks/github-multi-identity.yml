@@ -55,4 +55,9 @@
       {% if github_default_ssh_account | default('personal') == 'personal' %}- Personal repositories: All other directories (default behavior){% endif %}
       {% if github_default_ssh_account | default('personal') == 'work' %}- Personal repositories: {{ github_personal_directory | default('~/repositories/personal/') }}{% endif %}
       {% if github_default_ssh_account | default('personal') == 'work' %}- Work repositories: All other directories (default behavior){% endif %}
-  when: configure_github_multi_identity | default(false) 
+      
+      gh CLI (directory-based account for PRs and API):
+      - Personal GitHub user: {{ github_personal_username }}
+      - Work GitHub user: {{ github_work_username }}
+      - Run once: gh auth login (for each account), then open a new shell or run: source ~/.zshrc
+  when: configure_github_multi_identity | default(false)
