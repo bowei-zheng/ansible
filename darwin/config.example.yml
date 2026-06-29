@@ -58,12 +58,14 @@ configure_github_multi_identity: false
 # Personal GitHub account settings (used for all repositories except work directory)
 github_personal_email: "your-personal-email@example.com"
 git_personal_name: "Your Personal Name"
+github_personal_username: "your-personal-github-username"
 github_personal_directory: "~/repositories/personal/"
 github_personal_ssh_host: "personal"
 
 # Work GitHub account settings (used only for repositories in work directory)
 github_work_email: "your-work-email@company.com"
 git_work_name: "Your Work Name"
+github_work_username: "your-work-github-username"
 github_work_directory: "~/repositories/work/"
 github_work_ssh_host: "work"
 

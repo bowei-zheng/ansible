@@ -207,11 +207,13 @@
       - github_work_email
       - git_personal_name
       - git_work_name
+      - github_personal_username
+      - github_work_username
       
       Please configure these variables in your config.yml file.
   when: 
     - configure_github_multi_identity | default(false)
-    - (github_personal_email is not defined or github_work_email is not defined or git_personal_name is not defined or git_work_name is not defined)
+    - (github_personal_email is not defined or github_work_email is not defined or git_personal_name is not defined or git_work_name is not defined or github_personal_username is not defined or github_work_username is not defined)
 
 - name: Show configuration summary
   debug:
