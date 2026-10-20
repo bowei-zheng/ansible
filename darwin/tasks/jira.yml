@@ -54,6 +54,22 @@
     - not (configure_jira | default(false))
     - ansible_user_id != 'root'
 
+# homebrew.yml sets this fact, but --tags jira skips that file.
+- name: Check Homebrew on Apple Silicon
+  ansible.builtin.stat:
+    path: /opt/homebrew/bin/brew
+  register: jira_homebrew_check_apple
+  when:
+    - configure_jira | default(false)
+    - homebrew_path is not defined
+
+- name: Set Homebrew path for jira-cli
+  ansible.builtin.set_fact:
+    homebrew_path: "{{ '/opt/homebrew/bin/brew' if jira_homebrew_check_apple.stat.exists else '/usr/local/bin/brew' }}"
+  when:
+    - configure_jira | default(false)
+    - homebrew_path is not defined
+
 - name: Initialize jira-cli config
   ansible.builtin.command:
     argv:
@@ -110,6 +126,7 @@
     mode: "0600"
   when:
     - configure_jira | default(false)
+    - not ansible_check_mode
     - (jira_init is changed) or (jira_init_force is changed)
 
 - name: Display jira-cli configuration summary
