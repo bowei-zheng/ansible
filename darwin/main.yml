@@ -68,3 +68,6 @@
     - import_tasks: tasks/ngrok.yml
       when: configure_ngrok
       tags: ['ngrok']
+
+    - import_tasks: tasks/jira.yml
+      tags: ['jira', 'jira-cli']

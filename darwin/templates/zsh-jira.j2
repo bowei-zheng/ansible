@@ -1,0 +1,6 @@
+# --- jira-cli credentials ---
+export JIRA_API_TOKEN="{{ jira_api_token }}"
+{% if jira_auth_type | default('basic') != 'basic' %}
+export JIRA_AUTH_TYPE="{{ jira_auth_type }}"
+{% endif %}
+# --- End jira-cli credentials ---

@@ -143,3 +143,22 @@ ngrok_tunnels:
   - name: "api"
     proto: "http"
     addr: "3000"
+
+# jira-cli Configuration
+# Set to 'true' to install jira-cli, export JIRA_API_TOKEN in ~/.zshrc, and run `jira init`
+configure_jira: false
+
+# cloud (Atlassian Cloud) or local (on-premises / Data Center)
+jira_installation: cloud
+jira_server: "https://your-site.atlassian.net"
+# Cloud: Atlassian account email. On-prem: username.
+jira_login: "you@example.com"
+jira_project: "PROJ"
+# Exact board name. Use "None" to skip a default board.
+jira_board: "Board name"
+# API token (https://id.atlassian.com/manage-profile/security/api-tokens), or on-prem password / PAT
+jira_api_token: "YOUR_JIRA_API_TOKEN_HERE"
+# basic (default) or bearer (on-prem personal access token). mTLS is not automated.
+jira_auth_type: basic
+# Set to true to rerun `jira init --force` and replace ~/.config/.jira/.config.yml
+jira_force_init: false
