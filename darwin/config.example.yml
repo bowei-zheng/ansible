@@ -156,7 +156,8 @@ jira_login: "you@example.com"
 jira_project: "PROJ"
 # Exact board name. Use "None" to skip a default board.
 jira_board: "Board name"
-# API token (https://id.atlassian.com/manage-profile/security/api-tokens), or on-prem password / PAT
+# Create an API token at https://id.atlassian.com/manage-profile/security/api-tokens
+# On-prem: password, or a personal access token when jira_auth_type is bearer
 jira_api_token: "YOUR_JIRA_API_TOKEN_HERE"
 # basic (default) or bearer (on-prem personal access token). mTLS is not automated.
 jira_auth_type: basic
