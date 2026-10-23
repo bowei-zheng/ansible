@@ -1,0 +1,147 @@
+# jira-cli: install, export API token in ~/.zshrc, and generate config via `jira init`.
+- name: Validate jira-cli configuration
+  ansible.builtin.assert:
+    that:
+      - jira_installation is defined
+      - jira_installation in ['cloud', 'local']
+      - jira_server is defined
+      - jira_server | length > 0
+      - jira_login is defined
+      - jira_login | length > 0
+      - jira_project is defined
+      - jira_project | length > 0
+      - jira_board is defined
+      - jira_board | length > 0
+      - jira_api_token is defined
+      - jira_api_token | length > 0
+      - jira_api_token != 'YOUR_JIRA_API_TOKEN_HERE'
+      - jira_auth_type | default('basic') in ['basic', 'bearer']
+    fail_msg: |
+      jira-cli configuration is incomplete. Please ensure the following are defined in config.yml:
+      - jira_installation (cloud or local)
+      - jira_server (https://your-site.atlassian.net)
+      - jira_login (Atlassian account email, or on-prem username)
+      - jira_project (default project key)
+      - jira_board (exact board name, or None)
+      - jira_api_token (API token; not the example placeholder)
+      - jira_auth_type (optional; basic or bearer)
+    success_msg: "jira-cli configuration validation passed"
+  when: configure_jira | default(false)
+
+- name: Install jira-cli via Homebrew
+  community.general.homebrew:
+    name: jira-cli
+    state: present
+  when: configure_jira | default(false)
+
+- name: Inject jira-cli credentials into .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    create: true
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - jira-cli"
+    prepend_newline: true
+    block: "{{ lookup('template', 'zsh-jira.j2') | trim }}"
+  when:
+    - configure_jira | default(false)
+    - ansible_user_id != 'root'
+
+- name: Remove jira-cli credentials from .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - jira-cli"
+    state: absent
+  when:
+    - not (configure_jira | default(false))
+    - ansible_user_id != 'root'
+
+# homebrew.yml sets this fact, but --tags jira skips that file.
+- name: Check Homebrew on Apple Silicon
+  ansible.builtin.stat:
+    path: /opt/homebrew/bin/brew
+  register: jira_homebrew_check_apple
+  when:
+    - configure_jira | default(false)
+    - homebrew_path is not defined
+
+- name: Set Homebrew path for jira-cli
+  ansible.builtin.set_fact:
+    homebrew_path: "{{ '/opt/homebrew/bin/brew' if jira_homebrew_check_apple.stat.exists else '/usr/local/bin/brew' }}"
+  when:
+    - configure_jira | default(false)
+    - homebrew_path is not defined
+
+- name: Initialize jira-cli config
+  ansible.builtin.command:
+    argv:
+      - "{{ homebrew_path | dirname }}/jira"
+      - init
+      - --installation
+      - "{{ jira_installation }}"
+      - --server
+      - "{{ jira_server }}"
+      - --login
+      - "{{ jira_login }}"
+      - --auth-type
+      - "{{ jira_auth_type | default('basic') }}"
+      - --project
+      - "{{ jira_project }}"
+      - --board
+      - "{{ jira_board }}"
+    creates: "{{ ansible_env.HOME }}/.config/.jira/.config.yml"
+  environment:
+    JIRA_API_TOKEN: "{{ jira_api_token }}"
+  register: jira_init
+  when:
+    - configure_jira | default(false)
+    - not (jira_force_init | default(false))
+
+- name: Reinitialize jira-cli config
+  ansible.builtin.command:
+    argv:
+      - "{{ homebrew_path | dirname }}/jira"
+      - init
+      - --installation
+      - "{{ jira_installation }}"
+      - --server
+      - "{{ jira_server }}"
+      - --login
+      - "{{ jira_login }}"
+      - --auth-type
+      - "{{ jira_auth_type | default('basic') }}"
+      - --project
+      - "{{ jira_project }}"
+      - --board
+      - "{{ jira_board }}"
+      - --force
+  environment:
+    JIRA_API_TOKEN: "{{ jira_api_token }}"
+  register: jira_init_force
+  when:
+    - configure_jira | default(false)
+    - jira_force_init | default(false)
+
+- name: Restrict jira-cli config file permissions
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/.jira/.config.yml"
+    mode: "0600"
+  when:
+    - configure_jira | default(false)
+    - not ansible_check_mode
+    - (jira_init is changed) or (jira_init_force is changed)
+
+- name: Display jira-cli configuration summary
+  ansible.builtin.debug:
+    msg: |
+      jira-cli configuration completed:
+      - Installation: {{ jira_installation }}
+      - Server: {{ jira_server }}
+      - Login: {{ jira_login }}
+      - Project: {{ jira_project }}
+      - Board: {{ jira_board }}
+      - Auth type: {{ jira_auth_type | default('basic') }}
+      - Config file: ~/.config/.jira/.config.yml
+      - Token exported in ~/.zshrc (ANSIBLE MANAGED BLOCK - jira-cli)
+
+      Verify:
+        jira me
+  when: configure_jira | default(false)
